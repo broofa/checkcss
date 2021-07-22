@@ -10,7 +10,7 @@ function checkClassNames(node, includeChildren = false) {
   if (node?.classList)  {
     for (const cl of node.classList) {
       // Ignore if matches the ignore regex
-      if (ignoreRE.test(cl)) continue;
+      if (ignoreRE?.test(cl)) continue;
 
       // Ignore defined and already-seen classes
       if (defined.has(cl) || seen.has(cl)) continue;
