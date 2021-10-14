@@ -42,9 +42,11 @@ function ingestRules(rules) {
       ingestRules(rule.cssRules);
     } else if (rule.selectorText) {
       // Get defined classes.  (Regex here could probably use improvement)
-      const classes = rule.selectorText?.match(/\.[\w-]+/g);
+      const classes = rule.selectorText?.match(/\.(?:[\w-]|\\[:./[\]])+/g);
       if (classes) {
-        for (const cl of classes) { defined.add(cl.substr(1)); }
+        for (const cl of classes) {
+          defined.add(cl.substr(1).replace(/\\/g, ''));
+        }
       }
     }
   }
