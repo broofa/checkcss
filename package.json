@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node test/test.js",
     "prepare": "rm -fr dist && yarn build",
     "build": "tsc",
     "build:watch": "tsc --watch"

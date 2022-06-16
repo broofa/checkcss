@@ -1,4 +1,7 @@
-const SELECTOR_REGEX = /\.(?:[\w-]|\\[:./[\]])+/g;
+// Regex for identifying class names in CSS selectors
+// REF: https://www.w3.org/TR/selectors-3/#lex
+export const CLASS_IDENT_REGEX =
+  /\.-?(?:[_a-z]|[^\0-\x7f]|\\[0-9a-f]{1,6}\s?|\\[^\s0-9a-f])(?:[_a-z0-9-]|[^\0-\x7f]|\\[0-9a-f]{1,6}\s?|\\[^\s0-9a-f])*/gi;
 
 const seen = new Set();
 let defined: Set<any>;
@@ -9,7 +12,7 @@ export function ignoreCSS(re: RegExp | undefined) {
 }
 
 function checkClassNames(node: Element, includeChildren = false) {
-  if (node?.classList)  {
+  if (node?.classList) {
     for (const cl of node.classList) {
       // Ignore defined and already-seen classes
       if (defined.has(cl) || seen.has(cl)) continue;
@@ -17,7 +20,7 @@ function checkClassNames(node: Element, includeChildren = false) {
       // Mark as seen
       seen.add(cl);
 
-      // Ignore if matches the ignore regex
+      // Ignore classes that mathc the ignore regex
       if (ignoreRE?.test(cl)) continue;
 
       console.warn(`Undefined CSS class: ${cl}`, node);
@@ -31,25 +34,42 @@ function checkClassNames(node: Element, includeChildren = false) {
   }
 }
 
-function ingestRules(rules: CSSRuleList | StyleSheetList) {
+function isGroupingRule(rule: CSSRule): rule is CSSGroupingRule {
+  return 'cssRules' in rule;
+}
+
+function isCSSStyleRule(rule: CSSRule): rule is CSSStyleRule {
+  return 'selectorText' in rule;
+}
+
+export function extractClasses(sel: string) {
+  const classnames = sel.match(CLASS_IDENT_REGEX) ?? [];
+  return classnames.map(c => {
+    // Strip '.'
+    c = c.substring(1);
+
+    // Unescape numeric escape sequences (\###)
+    c = c.replaceAll(/\\[0-9a-f]{1,6}\s?/gi, escape => {
+      return String.fromCodePoint(parseInt(escape.substring(1), 16));
+    });
+
+    // Unescape character escape sequences (\[some char])
+    c = c.replaceAll(/\\[^\s0-9a-f]/g, c => c.substring(1));
+    return c;
+  });
+}
+
+function ingestRules(rules: CSSRuleList) {
   for (const rule of rules) {
-    if (!rule) continue;
-    try {
-      (rule as CSSStyleSheet).cssRules;
-    } catch (err) {
-      console.log(`Unable to access ${(rule as CSSStyleSheet).href}`);
-      continue;
-    }
-    if ((rule as CSSStyleSheet)?.cssRules) {
-      // Rules can contain sub-rules (e.g. @media, @print)
-      ingestRules((rule as CSSStyleSheet).cssRules);
-    } else if ((rule as CSSStyleRule).selectorText) {
-      // Get defined classes.  (Regex here could probably use improvement)
-      const classes = (rule as CSSStyleRule).selectorText?.match(SELECTOR_REGEX);
-      if (classes) {
-        for (const cl of classes) {
-          defined.add(cl.substring(1).replace(/\\/g, ''));
-        }
+    if (isGroupingRule(rule)) {
+      // Some rules are groups of rules (e.g. CSSMediaRule), so we need to
+      // recurse into them
+      ingestRules(rule.cssRules);
+    } else if (isCSSStyleRule(rule)) {
+      // Add each classname to the defined set
+      for (const classname of extractClasses(rule.selectorText)) {
+        console.log('INGESTING', classname);
+        defined.add(classname);
       }
     }
   }
@@ -80,7 +100,7 @@ export function monitorCSS() {
   observer.observe(document, {
     attributes: true,
     childList: true,
-    subtree: true
+    subtree: true,
   });
 }
 
@@ -88,8 +108,10 @@ export default function checkCSS() {
   if (defined) return;
   defined = new Set();
 
-  // Cache
-  ingestRules(document.styleSheets);
+  // Ingest rules from all stylesheets
+  for (const sheet of document.styleSheets) {
+    ingestRules(sheet.cssRules);
+  }
 
   // Do a sweep of the existing DOM
   checkClassNames(document.documentElement, true);
