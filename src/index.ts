@@ -68,7 +68,6 @@ function ingestRules(rules: CSSRuleList) {
     } else if (isCSSStyleRule(rule)) {
       // Add each classname to the defined set
       for (const classname of extractClasses(rule.selectorText)) {
-        console.log('INGESTING', classname);
         defined.add(classname);
       }
     }
