@@ -4,9 +4,12 @@
   "type": "module",
   "description": "Utility method for warning when elements have a `class` attribute that refers to an undefined CSS class",
   "main": "dist/index.js",
-  "types": "dist/index.d.js",
+  "exports": {
+    ".":  "./dist/index.js"
+  },
   "scripts": {
     "test": "node test/test.js",
+    "test:browser": "npx http-server -o /test/browser-test.htm",
     "prepare": "rm -fr dist && yarn build",
     "build": "tsc",
     "build:watch": "tsc --watch"
@@ -28,5 +31,8 @@
   "license": "ISC",
   "devDependencies": {
     "typescript": "^4.7.3"
+  },
+  "dependencies": {
+    "uuid": "^9.0.0"
   }
 }

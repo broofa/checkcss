@@ -5,10 +5,14 @@ import { extractClasses } from '../dist/index.js';
 // Test the regex used to scrape classnames out of rule selector text
 //
 
-// Sampling of selector patterns that show up in the `tailwind` framework. "X" =
-// text of some sort, "0" = numeric digits of some sort.
+// Sampling of selector patterns that show up in the Tailwind framework
+// "X" = text of some sort, "0" = numeric digits of some sort.
 const TAILWIND_SELECTORS = {
+  '.w-[32px]': ['w-[32px]'],
+  '.left-1/2': ['left-1/2'],
+
   '.-X\\.X': ['-X.X'],
+
   '.-X\\.X > :X([X]) ~ :X([X])': ['-X.X'],
   '.X, .X, .X': ['X', 'X', 'X'],
   '.X:X .X\\:X': ['X', 'X:X'],
