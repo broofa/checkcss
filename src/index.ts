@@ -12,6 +12,7 @@ function warn(msg: string) {
   console.warn(msg);
 }
 
+// Legacy API support
 export function ignoreCSS(re: RegExp | undefined) {
   ignoreRE = re;
 }
@@ -21,11 +22,11 @@ export default function checkCSS() {
 
   if (!checkcss) {
     checkcss = new CheckCSS(document);
-  }
 
-  checkcss.onClassnameDetected = (classname, el) => {
-    return ignoreRE?.test(classname) ?? true;
-  };
+    checkcss.onClassnameDetected = (classname, el) => {
+      return ignoreRE?.test(classname) ?? true;
+    };
+  }
 
   checkcss.scan();
 }

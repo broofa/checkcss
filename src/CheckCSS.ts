@@ -22,7 +22,10 @@ export class CheckCSS {
 
   // Callback when undefined classname is detected (defaults to console.warn())
   onUndefinedClassname(classname: string) {
-    console.warn(`CheckCSS: Undefined classname: ${classname}`);
+    console.warn(
+      `CheckCSS: Undefined classname: ${classname}`,
+      this.#documentElement.querySelectorAll(`.${classname}`)
+    );
   }
 
   // Classnames defined in stylesheets
@@ -107,7 +110,7 @@ export class CheckCSS {
     return this.#classnames;
   }
 
-  scan(delay = 3000) {
+  scan(delay = 100) {
     this.#processElement();
     this.#check(delay);
     return this;

@@ -1,34 +1,39 @@
-
 # checkcss
 
-Utility method for warning any time the `class` attribute of an element references an undefined CSS class.
+Logic for detecting when DOM elements reference undefined CSS classes.
 
-This module provides two methods:
-
-* `checkCSS()` performs a one-time sweep of the DOM.
-* `monitorCSS()` Sets up a
-[MutationObserver](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) to continuously monitor DOM changes, looking for elements that reference undefined CSS classes.
-
-(Note: `monitorCSS()` is fairly efficient but is probably not something you want to be
- running in production.)
+Note: The `scan()` method uses the [MutationObserver](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) API to monitor DOM changes. While this should be pretty efficient, it's probably not something you want to be running in production.
 
 ## Installation
 
 ```
-npm i checkcss
+npm install checkcss
+# or
+yarn add checkcss
 ```
 
 ## Usage
 
 ```javascript
-import checkCSS, { ignoreCSS, monitorCSS } from 'checkcss';
+import { CheckCSS } from 'checkcss';
 
-// (optional) Set a regex for classnames to ignore
-ignoreCSS(/^license-|^maintainer-/);
+// Create CheckCSS instance
+const checkcss = new CheckCSS();
 
-// Check current DOM
-checkCSS();
+// OPTIONAL: Set hook to filter classnames.
+// Return false for classnames that should be ignored.
+checkcss.onClassnameDetected = function (classname, element) {
+  return /^license-|^maintainer-/.test();
+};
 
-// ... and setup monitor to check DOM as it changes
-monitorCSS();
+// OPTIONAL: Set hook for custom logging (replaces default log method)
+checkcss.onUndefinedClassname = function (classname) {
+  // Custom logging goes here
+};
+
+// Scan
+checkcss.scan();
+
+// Add mutation observer to continue checking as DOM changes
+checkcss.watch();
 ```
