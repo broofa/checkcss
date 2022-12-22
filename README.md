@@ -31,9 +31,9 @@ checkcss.onUndefinedClassname = function (classname) {
   // Custom logging goes here
 };
 
-// Scan
+// Scan current DOM for undefined classes
 checkcss.scan();
 
-// Add mutation observer to continue checking as DOM changes
+// Monitor DOM as it changes
 checkcss.watch();
 ```
