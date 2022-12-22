@@ -1,3 +1,5 @@
+// Regex for identifying class names in CSS selectors
+//
 // REF: https://www.w3.org/TR/selectors-3/#lex
 const CLASS_IDENT_REGEX =
   /\.-?(?:[_a-z]|[^\0-\x7f]|\\[0-9a-f]{1,6}\s?|\\[^\s0-9a-f])(?:[_a-z0-9-]|[^\0-\x7f]|\\[0-9a-f]{1,6}\s?|\\[^\s0-9a-f])*/gi;
@@ -24,7 +26,7 @@ export function isElement(el: Node): el is Element {
 
 export function scanElementForClassnames(
   node: Element,
-  scanChildNodes: boolean = false,
+  scanChildren: boolean = false,
   detected = new Set<string>()
 ) {
   if (node?.classList) {
@@ -34,7 +36,7 @@ export function scanElementForClassnames(
     }
   }
 
-  if (scanChildNodes) {
+  if (scanChildren) {
     for (const el of node.querySelectorAll('*')) {
       scanElementForClassnames(el, false, detected);
     }

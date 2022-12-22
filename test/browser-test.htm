@@ -4,22 +4,25 @@
     <title>Browser Test</title>
 
     <script type="module">
-      import { CheckCSS } from '../dist/index.js';
+      import { CheckCSS, ClassnameStatus } from '../dist/index.js';
 
+      const { DETECTED, IGNORED, EMITTED, DEFINED } = ClassnameStatus;
       const LAZY_CLASS = 'text-bg-primary';
       const MISSING_CLASS = 'MiSsInG_ClAsS';
 
-      function assert(condition, message) {
-        if (!condition) {
-          throw new Error(message);
+      function assert(expected, actual, message) {
+        if (expected !== actual) {
+          console.error(
+            new Error(`${message} (expected = ${expected}, actual = ${actual})`)
+          );
         }
       }
 
-      function lazyAddLink() {
+      function lazyAddLink(stylesheetUrl) {
         const linkEl = document.createElement('link');
         linkEl.setAttribute('rel', 'stylesheet');
-        linkEl.href =
-          'https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css';
+        linkEl.href = stylesheetUrl;
+        linkEl.setAttribute('crossorigin', 'anonymous');
 
         const divEl = document.createElement('div');
         divEl.className = LAZY_CLASS;
@@ -27,30 +30,48 @@
 
         document.body.append(linkEl);
         document.body.append(divEl);
+
+        return linkEl;
       }
 
-      async function runChecks(checkcss) {
-        const state = checkcss._state;
-        console.log('FDJAFDS', state);
-        assert(
-          state.get(MISSING_CLASS) === 0,
-          `{$MISSING_CLASS} should be detected`
-        );
+      async function runChecks() {
+        try {
+          const checkcss = new CheckCSS();
 
-        document.querySelector('#output').innerHTML = '-- All checks passed --';
+          checkcss.scan();
+          checkcss.watch();
 
-        await lazyAddLink();
-        // assert(defined.has(LAZY_CLASS), `${LAZY_CLASS} should be defined`);
+          const testState = checkcss._testState;
+          assert(3, testState.size, 'Unexpected number of classes');
+          for (const [k, v] of Object.entries({
+            [MISSING_CLASS]: DETECTED,
+            'text-warning': DETECTED,
+            'bg-dark': DETECTED,
+          })) {
+            assert(v, testState.get(k), `Class state for "${k}"`);
+          }
+
+          const newLink = await lazyAddLink(
+            'https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css'
+          );
+
+          newLink.addEventListener('load', () => {
+            for (const [k, v] of Object.entries({
+              [MISSING_CLASS]: EMITTED,
+              'text-warning': DEFINED,
+              'bg-dark': DEFINED,
+            })) {
+              assert(v, testState.get(k), `Lazy class state for "${k}"`);
+            }
+            document.querySelector('#output').innerHTML =
+              '-- Check console for errors --';
+          });
+        } catch (err) {
+          console.error(err);
+        }
       }
 
-      window.addEventListener('load', function () {
-        const checkcss = new CheckCSS();
-        checkcss.scan();
-        checkcss.watch();
-        console.log(checkcss._state);
-        setTimeout(() => console.log(checkcss._state), 100);
-        runChecks(checkcss);
-      });
+      window.addEventListener('load', runChecks);
     </script>
   </head>
 

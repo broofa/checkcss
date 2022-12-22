@@ -1,5 +1,3 @@
-// Regex for identifying class names in CSS selectors
-
 import {
   isCSSStyleRule,
   isGroupingRule,
@@ -9,7 +7,7 @@ import {
   scanElementForClassnames,
 } from './util.js';
 
-enum ClassnameStatus {
+export enum ClassnameStatus {
   DETECTED = 0, // name is used in `class` attribute
   IGNORED = 1, // ... but ignored (e.g. via onClassnameDetected)
   EMITTED = 2, // ... or has already been emitted via onUndefinedClassname
@@ -17,38 +15,49 @@ enum ClassnameStatus {
 }
 
 export class CheckCSS {
-  // Event handler called whenever a new classname is detected in the DOM.
-  // Return false to ignore the class name
+  // Hook for filtering classnames in DOM. Thi is called whenever a new
+  // classname is detected in the DOM. Callback should return true to indicate
+  // the class should be checked, false to ignore.
   onClassnameDetected?: (classname: string, el: Element) => boolean;
 
-  // Event handler called when an undefined classname is detected (defaults to
-  // console.warn())
+  // Callback when undefined classname is detected (defaults to console.warn())
   onUndefinedClassname(classname: string) {
     console.warn(`CheckCSS: Undefined classname: ${classname}`);
   }
 
-  // Classnames defined by stylesheets
+  // Classnames defined in stylesheets
   #classnames = new Map<string, ClassnameStatus>();
 
+  // # of external stylesheets that actively loading.
+  #pending = 0;
+
+  // Default root element to scan for classnames
   #documentElement: HTMLElement;
+
   #observer?: MutationObserver;
 
-  // Timer for debouncing checks
+  // Check timer
   #timer?: number;
 
   constructor(document: Document = window.document) {
     this.#documentElement = document.documentElement;
   }
 
-  #check(lazy = false) {
-    if (lazy) {
-      if (this.#timer) return;
-      this.#timer = setTimeout(() => {
-        this.#timer = undefined;
-        this.#check();
-      }, 3000);
+  #check(delay = 0) {
+    // Clear pending timer
+    if (this.#timer) {
+      clearTimeout(this.#timer);
+      this.#timer = undefined;
+    }
+
+    // If non-zero delay, defer the call
+    if (delay > 0) {
+      this.#timer = setTimeout(() => this.#check(0), delay);
       return;
     }
+
+    // Skip checks while stylesheets are still pending
+    if (this.#pending > 0) return;
 
     if (!this.onUndefinedClassname) return;
 
@@ -71,17 +80,15 @@ export class CheckCSS {
 
       const ignore =
         this.onClassnameDetected && !this.onClassnameDetected(classname, el);
+
       this.#classnames.set(
         classname,
         ignore ? ClassnameStatus.IGNORED : ClassnameStatus.DETECTED
       );
     }
-
-    this.#check(true);
   }
 
   #processStylesheet(sheet: CSSStyleSheet | CSSGroupingRule) {
-    console.log('CheckCSS: Processing stylesheet ', sheet);
     for (const rule of sheet.cssRules) {
       if (isGroupingRule(rule)) {
         // Recurse into grouping rules (e.g. CSSMediaRule)
@@ -95,27 +102,49 @@ export class CheckCSS {
     }
   }
 
-  // FOR TESTING ONLY!  Not a public API.  Expect this to break at any time.
-  get _state() {
+  // FOR TESTING ONLY.  This may be removed or changed without warning.
+  get _testState() {
     return this.#classnames;
   }
 
-  scan() {
+  scan(delay = 3000) {
     this.#processElement();
+    this.#check(delay);
+    return this;
   }
 
   watch() {
     if (this.#observer) return;
-    console.log('WATCH');
-
     this.#observer = new MutationObserver(mutationsList => {
       for (const mut of mutationsList) {
         if (mut.type === 'childList' && mut?.addedNodes) {
           for (const el of mut.addedNodes) {
-            console.log('SCANNING', el);
-            if ((isLinkElement(el) || isStyleElement(el)) && el.sheet) {
-              // Ingest rules from dynamically added stylesheets
-              this.#processStylesheet(el.sheet);
+            if (isStyleElement(el)) {
+              if (el.sheet) {
+                this.#processStylesheet(el.sheet);
+              }
+            } else if (isLinkElement(el)) {
+              if (el.sheet) {
+                // Style sheet link, with styles already loaded(?), process it
+                this.#processStylesheet(el.sheet);
+              } else {
+                // Style sheet link, but w/out styles (so not yet loaded?), wait
+                // until it's loaded
+                this.#pending++;
+
+                const loader = () => {
+                  el.removeEventListener('load', loader);
+                  el.removeEventListener('error', loader);
+
+                  if (el.sheet) this.#processStylesheet(el.sheet);
+
+                  this.#pending--;
+                  this.#check();
+                };
+
+                el.addEventListener('load', loader);
+                el.addEventListener('error', loader);
+              }
             } else if (el instanceof Element) {
               // Sweep DOM fragment
               this.#processElement(el);
@@ -126,13 +155,18 @@ export class CheckCSS {
           this.#processElement(mut.target as Element, false);
         }
       }
+
+      // Check for undefined classes if there's no stylesheets loading
+      this.#check();
     });
-    console.log('OBSERVE', document.body);
 
     this.#observer.observe(document.body, {
       attributes: true,
+      attributeFilter: ['class'],
       childList: true,
       subtree: true,
     });
+
+    return this;
   }
 }

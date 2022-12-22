@@ -1,5 +1,5 @@
 import { CheckCSS } from './CheckCSS.js';
-export { CheckCSS } from './CheckCSS.js';
+export * from './CheckCSS.js';
 
 let ignoreRE: RegExp | undefined;
 
@@ -19,7 +19,9 @@ export function ignoreCSS(re: RegExp | undefined) {
 export default function checkCSS() {
   warn('checkCSS() is deprecated. Use CheckCSS#scan() instead');
 
-  checkcss = new CheckCSS(document);
+  if (!checkcss) {
+    checkcss = new CheckCSS(document);
+  }
 
   checkcss.onClassnameDetected = (classname, el) => {
     return ignoreRE?.test(classname) ?? true;

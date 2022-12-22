@@ -2,7 +2,7 @@
   "name": "checkcss",
   "version": "1.3.1",
   "type": "module",
-  "description": "Utility method for warning when elements have a `class` attribute that refers to an undefined CSS class",
+  "description": "Detect references to undefined CSS classes",
   "main": "dist/index.js",
   "exports": {
     ".":  "./dist/index.js"
