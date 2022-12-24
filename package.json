@@ -3,10 +3,16 @@
   "version": "2.0.1",
   "type": "module",
   "description": "Detect references to undefined CSS classes",
+  "funding": [
+    "https://github.com/sponsors/broofa"
+  ],
   "main": "dist/index.js",
   "exports": {
     ".": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "node test/test.js",
     "test:browser": "npx http-server -o /test/browser-test.htm",

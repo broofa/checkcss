@@ -172,6 +172,7 @@ export class CheckCSS {
     this.#watch = true;
 
     if (this.#observer) return;
+
     this.#observer = new MutationObserver(mutationsList => {
       for (const mut of mutationsList) {
         switch (mut.type) {
