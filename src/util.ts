@@ -4,45 +4,22 @@
 const CLASS_IDENT_REGEX =
   /\.-?(?:[_a-z]|[^\0-\x7f]|\\[0-9a-f]{1,6}\s?|\\[^\s0-9a-f])(?:[_a-z0-9-]|[^\0-\x7f]|\\[0-9a-f]{1,6}\s?|\\[^\s0-9a-f])*/gi;
 
-export function isGroupingRule(rule: CSSRule): rule is CSSGroupingRule {
-  return 'cssRules' in rule;
+export function isGroupingRule(rule: any): rule is CSSGroupingRule {
+  return rule && 'cssRules' in rule;
 }
 
-export function isCSSStyleRule(rule: CSSRule): rule is CSSStyleRule {
-  return 'selectorText' in rule;
-}
-
-export function isLinkElement(el: Node): el is HTMLLinkElement {
-  return (el as Element).tagName?.toLowerCase() === 'link';
-}
-
-export function isStyleElement(el: any): el is HTMLStyleElement {
-  return (el as Element).tagName?.toLowerCase() === 'style';
+export function isCSSStyleRule(rule: any): rule is CSSStyleRule {
+  return rule && 'selectorText' in rule;
 }
 
 export function isElement(el: Node): el is Element {
-  return el instanceof Element;
+  return el?.nodeType === 1;
 }
 
-export function scanElementForClassnames(
-  node: Element,
-  scanChildren: boolean = false,
-  detected = new Set<string>()
-) {
-  if (node?.classList) {
-    for (const cl of node.classList) {
-      // Mark as seen
-      detected.add(cl);
-    }
-  }
-
-  if (scanChildren) {
-    for (const el of node.querySelectorAll('*')) {
-      scanElementForClassnames(el, false, detected);
-    }
-  }
-
-  return detected;
+export function isLinkElement(el: Node): el is HTMLLinkElement {
+  return (
+    el.nodeName === 'LINK' && (el as Element).tagName?.toLowerCase() === 'link'
+  );
 }
 
 export function parseSelectorForClassnames(sel: string) {
