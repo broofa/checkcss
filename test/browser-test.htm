@@ -42,7 +42,7 @@
           checkcss.watch();
 
           const testState = checkcss._testState;
-          assert(3, testState.size, 'Unexpected number of classes');
+          assert(4, testState.size, 'Unexpected number of classes');
           for (const [k, v] of Object.entries({
             [MISSING_CLASS]: DETECTED,
             'text-warning': DETECTED,
@@ -78,7 +78,7 @@
   <body>
     <h1><code>CheckCSS</code> Browser Test</h1>
 
-    <div id="output" class="MiSsInG_ClAsS"></div>
+    <div id="output" class="MiSsInG_ClAsS w-123px]"></div>
     <div class="text-warning bg-dark">Blarg</div>
   </body>
 </html>

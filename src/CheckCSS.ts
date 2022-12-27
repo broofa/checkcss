@@ -46,7 +46,7 @@ export class CheckCSS {
       '',
       'font-weight: bold',
       '',
-      this.#documentElement.querySelectorAll(`.${classname}`)
+      this.#documentElement.querySelectorAll(`.${CSS.escape(classname)}`)
     );
   }
 
