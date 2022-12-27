@@ -6,7 +6,6 @@
   "funding": [
     "https://github.com/sponsors/broofa"
   ],
-  "main": "dist/index.js",
   "exports": {
     ".": "./dist/index.js"
   },
@@ -37,8 +36,5 @@
   "license": "ISC",
   "devDependencies": {
     "typescript": "^4.7.3"
-  },
-  "dependencies": {
-    "uuid": "^9.0.0"
   }
 }
