@@ -33,12 +33,12 @@ export class CheckCSS {
   // Map that tracks the number of rules found in STYLE elements
   #seenStylesheets = new WeakMap<CSSRuleList, number>();
 
-  // Hook for filtering classnames in DOM. Thi is called whenever a new
+  // Hook for filtering classnames in DOM. This is called whenever a new
   // classname is detected in the DOM. Callback should return true to indicate
   // the class should be checked, false to ignore.
   onClassnameDetected?: (classname: string, el: Element) => boolean;
 
-  // Callback when undefined classname is detected (defaults to console.warn())
+  // Callback when undefined classname is detected (defaults to console.log())
   onUndefinedClassname(classname: string) {
     console.log(
       `%ccheckcss%c: No CSS rule for %c.${classname}%c, referenced by: %o`,
