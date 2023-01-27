@@ -104,12 +104,10 @@ export class CheckCSS {
       this.#processStylesheet(styleElement);
     }
 
-    if (!this.onUndefinedClassname) return;
-
     for (const [classname, status] of this.#classnames) {
       if (status == ClassnameStatus.DETECTED) {
         this.#classnames.set(classname, ClassnameStatus.EMITTED);
-        this.onUndefinedClassname(classname);
+        this.onUndefinedClassname?.(classname);
       }
     }
 
@@ -126,7 +124,12 @@ export class CheckCSS {
     // Detect styles referenced in "class" attribute
     for (const n of el.classList) {
       if (this.#classnames.has(n)) continue;
-      this.#classnames.set(n, ClassnameStatus.DETECTED);
+
+      if (this.onClassnameDetected?.(n, el) === false) {
+        this.#classnames.set(n, ClassnameStatus.IGNORED);
+      } else {
+        this.#classnames.set(n, ClassnameStatus.DETECTED);
+      }
     }
 
     // Recurse into children(?)

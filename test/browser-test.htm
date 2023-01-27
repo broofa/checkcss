@@ -37,12 +37,15 @@
       async function runChecks() {
         try {
           const checkcss = new CheckCSS();
+          checkcss.onClassnameDetected = (cn, el) => {
+            return !/^ignor/i.test(cn);
+          };
 
           checkcss.scan();
           checkcss.watch();
 
           const testState = checkcss._testState;
-          assert(4, testState.size, 'Unexpected number of classes');
+          assert(5, testState.size, 'Unexpected number of classes');
           for (const [k, v] of Object.entries({
             [MISSING_CLASS]: DETECTED,
             'text-warning': DETECTED,
@@ -59,6 +62,7 @@
             for (const [k, v] of Object.entries({
               [MISSING_CLASS]: EMITTED,
               'text-warning': DEFINED,
+              'ignorable_class': IGNORED,
               'bg-dark': DEFINED,
             })) {
               assert(v, testState.get(k), `Lazy class state for "${k}"`);
@@ -78,7 +82,7 @@
   <body>
     <h1><code>CheckCSS</code> Browser Test</h1>
 
-    <div id="output" class="MiSsInG_ClAsS w-123px]"></div>
+    <div id="output" class="MiSsInG_ClAsS ignorable_class w-123px]"></div>
     <div class="text-warning bg-dark">Blarg</div>
   </body>
 </html>

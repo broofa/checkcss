@@ -14,6 +14,9 @@ function warn(msg: string) {
 
 // Legacy API support
 export function ignoreCSS(re: RegExp | undefined) {
+  warn(
+    'ignoreRE is deprecated and will be removed in the next major release. Use CheckCSS#onClassnameDetected instead'
+  );
   ignoreRE = re;
 }
 
@@ -23,6 +26,7 @@ export default function checkCSS() {
   if (!checkcss) {
     checkcss = new CheckCSS(document);
 
+    // Legacy API support for ignoreRE.
     checkcss.onClassnameDetected = (classname, el) => {
       return ignoreRE?.test(classname) ?? true;
     };
