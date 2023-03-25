@@ -29,7 +29,7 @@ checkcss.onClassnameDetected = function (classname, element) {
   // Return `false` to disable checks for `classname`.
   // For example, to ignore classnames starting with
   // "license-" or "maintainer-"...
-  return /^license-|^maintainer-/.test(classname);
+  return /^license-|^maintainer-/.test(classname) ? false : true;
 };
 
 // OPTIONAL: Hook for custom logging
