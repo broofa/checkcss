@@ -41,11 +41,10 @@ export class CheckCSS {
   // Callback when undefined classname is detected (defaults to console.log())
   onUndefinedClassname(classname: string) {
     console.log(
-      `%ccheckcss%c: No CSS rule for %c.${classname}%c, referenced by: %o`,
+      `%ccheckcss%c: No CSS rule for %c.${classname}`,
       'color: darkorange',
       '',
       'font-weight: bold',
-      '',
       this.#documentElement.querySelectorAll(`.${CSS.escape(classname)}`)
     );
   }
@@ -85,13 +84,7 @@ export class CheckCSS {
       const { sheet } = styleElement;
       if (!sheet) continue;
 
-      let rules;
-      try {
-        rules = sheet.cssRules;
-      } catch (e) {
-        // fail silently (sheet not accessible)
-        continue;
-      }
+      const rules = sheet.cssRules;
 
       // Skip style elements we've seen before.  This is complicated by how
       // STYLE elements can be dynamically modified, in one of two ways:
@@ -153,7 +146,12 @@ export class CheckCSS {
     try {
       rules = isGroupingRule(sheet) ? sheet?.cssRules : sheet.sheet?.cssRules;
     } catch (e) {
-      // fail silently (sheet not accessible)
+      console.log(
+        '%ccheckcss:',
+        'color: darkorange',
+        'Inaccessible stylesheet may contain classes reported as undefined.  Use `onClassnameDetected` to ignore erroneously reported classes.',
+        sheet
+      );
     }
 
     if (!rules) return;
