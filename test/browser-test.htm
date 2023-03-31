@@ -3,6 +3,9 @@
     <meta http-equiv="Content-Security-Policy" content="" />
     <title>Browser Test</title>
 
+    <!-- test processing external sheets that don't support `crossorigin` -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic" />
+
     <script type="module">
       import { CheckCSS, ClassnameStatus } from '../dist/index.js';
 
@@ -55,6 +58,9 @@
       async function runChecks() {
         try {
           checkcss.onClassnameDetected = (cn, el) => {
+            // Whitelist "picnic" classes we reference
+            if (['success', 'button'].includes(cn)) return false;
+
             return !/^ignor/i.test(cn);
           };
 
@@ -62,7 +68,7 @@
           checkcss.watch();
 
           const testState = checkcss._testState;
-          assert(5, testState.size, 'Unexpected number of classes');
+          assert(7, testState.size, 'Unexpected number of classes');
           for (const [k, v] of Object.entries({
             [MISSING_CLASS]: DETECTED,
             'text-warning': DETECTED,
@@ -90,6 +96,7 @@
 
     <div id="output" class="MiSsInG_ClAsS ignorable_class w-123px]"></div>
     <div class="text-warning bg-dark">Blarg</div>
+    <div class="success button">Picnic Button</div>
     <div id="log"></div>
   </body>
 </html>

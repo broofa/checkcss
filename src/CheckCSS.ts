@@ -41,11 +41,10 @@ export class CheckCSS {
   // Callback when undefined classname is detected (defaults to console.log())
   onUndefinedClassname(classname: string) {
     console.log(
-      `%ccheckcss%c: No CSS rule for %c.${classname}%c, referenced by: %o`,
+      `%ccheckcss%c: No CSS rule for %c.${classname}`,
       'color: darkorange',
       '',
       'font-weight: bold',
-      '',
       this.#documentElement.querySelectorAll(`.${CSS.escape(classname)}`)
     );
   }
@@ -85,6 +84,8 @@ export class CheckCSS {
       const { sheet } = styleElement;
       if (!sheet) continue;
 
+      const rules = sheet.cssRules;
+
       // Skip style elements we've seen before.  This is complicated by how
       // STYLE elements can be dynamically modified, in one of two ways:
       //
@@ -96,10 +97,10 @@ export class CheckCSS {
       // to the crude logic here to see if anythings change.  While this logic
       // isn't perfect, it's reasonably performant and good enough for most
       // purposes.
-      const expectedLength = this.#seenStylesheets.get(sheet.cssRules) ?? 0;
-      const actualLength = sheet.cssRules.length;
+      const expectedLength = this.#seenStylesheets.get(rules) ?? 0;
+      const actualLength = rules.length;
       if (expectedLength === actualLength) continue;
-      this.#seenStylesheets.set(sheet.cssRules, actualLength);
+      this.#seenStylesheets.set(rules, actualLength);
 
       this.#processStylesheet(styleElement);
     }
@@ -141,9 +142,17 @@ export class CheckCSS {
   }
 
   #processStylesheet(sheet: HTMLStyleElement | CSSGroupingRule) {
-    const rules = isGroupingRule(sheet)
-      ? sheet?.cssRules
-      : sheet.sheet?.cssRules;
+    let rules;
+    try {
+      rules = isGroupingRule(sheet) ? sheet?.cssRules : sheet.sheet?.cssRules;
+    } catch (e) {
+      console.log(
+        '%ccheckcss:',
+        'color: darkorange',
+        'Inaccessible stylesheet may contain classes reported as undefined.  Use `onClassnameDetected` to ignore erroneously reported classes.',
+        sheet
+      );
+    }
 
     if (!rules) return;
 
