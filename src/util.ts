@@ -5,7 +5,7 @@ const CLASS_IDENT_REGEX =
   /\.-?(?:[_a-z]|[^\0-\x7f]|\\[0-9a-f]{1,6}\s?|\\[^\s0-9a-f])(?:[_a-z0-9-]|[^\0-\x7f]|\\[0-9a-f]{1,6}\s?|\\[^\s0-9a-f])*/gi;
 
 export function isGroupingRule(rule: any): rule is CSSGroupingRule {
-  return rule && 'cssRules' in rule;
+  return (rule?.cssRules?.length ?? 0) > 0;
 }
 
 export function isCSSStyleRule(rule: any): rule is CSSStyleRule {

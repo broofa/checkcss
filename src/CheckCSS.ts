@@ -146,12 +146,19 @@ export class CheckCSS {
     try {
       rules = isGroupingRule(sheet) ? sheet?.cssRules : sheet.sheet?.cssRules;
     } catch (e) {
-      console.log(
-        '%ccheckcss:',
-        'color: darkorange',
-        'Inaccessible stylesheet may contain classes reported as undefined.  Use `onClassnameDetected` to ignore erroneously reported classes.',
-        sheet
-      );
+      if (!(e instanceof Error)) throw e;
+
+      if (e.name === 'SecurityError') {
+        console.log(
+          '%ccheckcss:',
+          'color: darkorange',
+          'Inaccessible stylesheet may contain classes reported as undefined.  Use `onClassnameDetected` to ignore erroneously reported classes.',
+          sheet
+        );
+      } else {
+        e.message += '\n\n(Please report this error to https://github.com/broofa/checkcss/issues)';
+        throw e;
+      }
     }
 
     if (!rules) return;
